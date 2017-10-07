@@ -67,7 +67,7 @@ int main (int argc, char *argv[])
 
     /* Sockets Layer Call : bind() */
 
-    bindVal = bind (udpNewSoc, (struct sockaddr *) &serv_Addr, sizeof(serv_Addr))
+    bindVal = bind (udpNewSoc, (struct sockaddr *) &serv_Addr, sizeof(serv_Addr));
 
     if (bindVal < 0)
         error ("ERROR occured while binding");
@@ -83,7 +83,7 @@ int main (int argc, char *argv[])
     }
         
        
-    close(s);
+    close(udpNewSoc);
 
     return 0;
     
