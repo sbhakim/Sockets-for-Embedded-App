@@ -45,7 +45,7 @@ int main (int argc, char *argv[])
     
     printf ("\n IPv4 UDP Server Started ...\n");
 
-    udpNewSoc = socket (Af_INET, SOCK_DGRAM, 0);
+    udpNewSoc = socket (AF_INET, SOCK_DGRAM, 0);
 
     if (udpNewSoc < 0)
         error ("Error opening the socket");
