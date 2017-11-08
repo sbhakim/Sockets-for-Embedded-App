@@ -1,91 +1,58 @@
-/* UDP supports unreliable transmission of data, mainly used for Apps */
-/* In UDP, "SOCK_DGRAM" is used*/
-
-/* The following program is a sever side program implemented for UDP */
-
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/socket.h>
+/* -----------------------------------------------  */ 
+#include <stdio.h>          /* For fprintf */
+#include <stdlib.h>         
 #include <sys/types.h>
-#include <netinet/in.h>
-
+#include <sys/socket.h>
+#include <string.h>         /* For memcpy */
 #include <netdb.h>
-#include <arpa/inet.h>
 
+#define PORT 5678
+#define BUFSIZE 2048
 
-#define BUFLEN 256
-#define NPACK 10
+int main (int argc, char **argv){
 
-void error (char *msg){
-    perror (msg);
-    exit(1);
+	int sock;                           /* This is our socket file descriptor */
+	int  bindVal;
+	struct sockaddr_in6 my_addr;          /* our address */
+	socklen_t addrlen = sizeof (my_addr);
+	int recvlen;                        /* #bytes received */
+	unsigned char buf[BUFSIZE];         /* receive buffer*/
+
+	/* Creating a UDP socket */
+	sock = socket (AF_INET6, SOCK_DGRAM, 0);
+	if (sock < 0){
+		perror ("Unable to create socket!! \n");
+		return 0;
+	}
+
+	/* Bind the socket to any valid IP address and a specific port */
+
+	memset ((char *) &my_addr, 0, sizeof(my_addr));
+	my_addr.sin6_family = AF_INET6;
+	//    my_addr.sin6_addr = htonl (in6addr_any);
+	my_addr.sin6_addr = in6addr_any;
+	my_addr.sin6_port = htons(PORT);
+
+	bindVal = bind(sock, (struct sockaddr *) &my_addr, sizeof(my_addr));
+
+	if (bindVal < 0){
+		perror("bind failed");
+		return 0;
+	}
+	/* now loop, receiving data and printing what we received */
+
+	for (;;){
+		printf ("Waiting on port %d\n", PORT);
+		recvlen = recvfrom(sock, buf, BUFSIZE, 0, (struct sockaddr *) &my_addr, &addrlen);
+
+		printf ("\nReceived %d bytes \n", recvlen);
+
+		if (recvlen > 0){
+			buf[recvlen] = 0;
+			printf ("received message: \"%s\" \n", buf);
+		}
+		/* never exits */
+	}
 }
 
-
-int main (int argc, char *argv[])
-{
-    int udpNewSoc;
-    char buffer[BUFLEN];
-    int portNo, nBytes;
-
-    struct sockaddr_in serv_Addr, cli_Addr;         // delclaring the locations
-
-    int slen = sizeof (cli_Addr);
-    int i, bindVal;
-
-    /* Creating new UDP socket */
-    
-    
-    if (argc < 2)
-    {
-        fprintf(stderr, "Usage: %s \n", argv[0]);
-        exit(0);
-    }
-    
-    printf ("\n IPv4 UDP Server Started ...\n");
-
-    udpNewSoc = socket (AF_INET, SOCK_DGRAM, 0);
-
-    if (udpNewSoc < 0)
-        error ("Error opening the socket");
-    
-    
-    /* Allocation memory locations and figuring the portno*/
-
-    bzero ((char*) &serv_Addr, sizeof (serv_Addr));
-    portNo = atoi(argv[1]);
-       
-
-    /* Configuring the settings of Address struct */
-
-    serv_Addr.sin_family = AF_INET;
-    serv_Addr.sin_port  = htons (portNo);
-    serv_Addr.sin_addr.s_addr = inet_addr ("127.0.0.1");
-
-    
-
-    /* Sockets Layer Call : bind() */
-
-    bindVal = bind (udpNewSoc, (struct sockaddr *) &serv_Addr, sizeof(serv_Addr));
-
-    if (bindVal < 0)
-        error ("ERROR occured while binding");
-
-    for (i = 0; i < NPACK; i++){
-         nBytes = recvfrom (udpNewSoc, buffer, BUFLEN, 0, &cli_Addr, slen);
-        
-        if (nBytes < 0)
-            error ("Error occued while receiving packets");
-
-        printf ("Received packet from %s:%d \nData: %s\n\n", 
-            inet_ntoa(cli_Addr.sin_addr), ntohs(cli_Addr.sin_port), buffer);
-    }
-        
-       
-    close(udpNewSoc);
-
-    return 0;
-    
-}
-
+/* -----------------------------------------------  */
